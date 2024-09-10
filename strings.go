@@ -6,6 +6,7 @@ type stringsValidator = func(string) (string, error)
 
 type strings struct {
 	field      string
+	coerce     bool
 	validators []stringsValidator
 }
 
@@ -60,4 +61,37 @@ func (s strings) Len(min, max int) strings {
 	s.validators = append(s.validators, validator)
 
 	return s
+}
+
+func (s *strings) Val(value string) (string, error) {
+	var err error
+
+	for _, val := range s.validators {
+		value, err = val(value)
+
+		if err != nil {
+			return value, err
+		}
+	}
+
+	return value, nil
+}
+
+func (s strings) CoerceAndVal(value any) (string, error) {
+
+	return s.Val(value)
+}
+
+func (s strings) ValAny(value string) (string, []error) {
+	var err error
+
+	errs := make([]error, 0)
+
+	for _, val := range s.validators {
+		value, err = val(value)
+
+		errs = append(errs, err)
+	}
+
+	return value, errs
 }
